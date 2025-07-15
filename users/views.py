@@ -30,7 +30,9 @@ class ProfileView(APIView):
 
     def get(self, request):
         serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+        data = serializer.data
+        data['is_mentor'] = request.user.is_mentor  # Add the new key here
+        return Response(data)  # Assuming you're returning a response
     
 class Fieldofinterest(APIView):
     authentication_classes = [IsAuthenticated]  # Your custom one

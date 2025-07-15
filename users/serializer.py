@@ -167,14 +167,19 @@ class BookingSerializer(serializers.ModelSerializer):
 class StudentSerializer(serializers.ModelSerializer):
     your_student = serializers.SerializerMethodField()
     request_pending = serializers.SerializerMethodField()
+    your_mentor = serializers.SerializerMethodField()
 
     class Meta:
         model = UserDetails
-        fields = ['User_ID', 'First_Name', 'Last_Name', 'Email_Address', 'Phone_Number', 'your_student', 'request_pending']
+        fields = ['User_ID', 'First_Name', 'Last_Name', 'Email_Address', 'Phone_Number', 'your_student', 'your_mentor', 'request_pending']
 
     def get_your_student(self, obj):
         user = self.context['request'].user
         return Booking.objects.filter(Mentor=user, Mentee=obj, status='accepted').exists()
+
+    def get_your_mentor(self, obj):
+        user = self.context['request'].user
+        return Booking.objects.filter(Mentor=obj, Mentee=user, status='accepted').exists()
 
     def get_request_pending(self, obj):
         user = self.context['request'].user

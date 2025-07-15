@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    .header {
+      background-color: #4CAF50;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .content {
+      padding: 30px;
+      color: #333;
+    }
+    .otp {
+      font-size: 28px;
+      font-weight: bold;
+      color: #4CAF50;
+      text-align: center;
+      margin: 20px 0;
+      letter-spacing: 4px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Welcome to GrantU</h1>
+    </div>
+    <div class="content">
+      <p>Hi {{ user_name }},</p>
+      <p>Thanks for signing up! Use the OTP below to verify your account:</p>
+      <div class="otp">{{ otp }}</div>
+      <p>This code is valid for the next 10 minutes.</p>
+      <p>If you didn’t request this, you can safely ignore this email.</p>
+      <p>Cheers,<br><strong>GrantU Team</strong></p>
+    </div>
+    <div class="footer">
+      &copy; 2025 GrantU. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

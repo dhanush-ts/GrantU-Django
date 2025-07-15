@@ -13,31 +13,107 @@ from rest_framework import status
 from users.serializer import *
 from users.authentication import *
 from rest_framework import generics, mixins
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 class RegisterView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            # otp = str(random.randint(000000, 999999))
             otp = f"{random.randint(0, 999999):06}"
             EmailOTP.objects.update_or_create(
                 email=user,
-                otp = otp
+                defaults={'otp': otp}
             )
 
+            html_message = render_to_string('otp_email.html', {
+                'otp': otp,
+                'user_name': user.First_Name
+            })
+            plain_message = strip_tags(html_message)
+
             send_mail(
-                subject="Your OTP Code",
-                message=f"Yo bruh, your OTP is {otp}",
+                subject="GrantU OTP Verification",
+                message=plain_message,
                 from_email="noreply@otp.com",
                 recipient_list=[user.Email_Address],
+                html_message=html_message,
             )
+
             token = generate_token(user)
             return Response({'token': token}, status=status.HTTP_201_CREATED)
+
         if "Email_Address" in serializer.errors:
             if "already exists" in str(serializer.errors["Email_Address"]):
                 return Response({'error': 'User with this email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        try:
+            user = UserDetails.objects.get(Email_Address=email)
+        except UserDetails.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if user and password == user.Password and not user.is_verified:
+            otp = f"{random.randint(0, 999999):06}"
+            EmailOTP.objects.update_or_create(
+                email=user,
+                defaults={'otp': otp}
+            )
+
+            html_message = render_to_string('otp_email.html', {
+                'otp': otp,
+                'user_name': user.First_Name
+            })
+            plain_message = strip_tags(html_message)
+
+            send_mail(
+                subject="GrantU OTP Verification",
+                message=plain_message,
+                from_email="noreply@otp.com",
+                recipient_list=[user.Email_Address],
+                html_message=html_message,
+            )
+
+            token = generate_token(user)
+            return Response({'token': token, 'verified': False}, status=status.HTTP_201_CREATED)
+
+        elif user and password == user.Password and user.is_verified:
+            token = generate_token(user)
+            return Response({'token': token, 'verified': True, 'is_mentor': user.is_mentor}, status=status.HTTP_200_OK)
+
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+# class RegisterView(APIView):
+#     def post(self, request):
+#         serializer = UserSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.save()
+#             # otp = str(random.randint(000000, 999999))
+#             otp = f"{random.randint(0, 999999):06}"
+#             EmailOTP.objects.update_or_create(
+#                 email=user,
+#                 otp = otp
+#             )
+
+#             send_mail(
+#                 subject="Your OTP Code",
+#                 message=f"Yo bruh, your OTP is {otp}",
+#                 from_email="noreply@otp.com",
+#                 recipient_list=[user.Email_Address],
+#             )
+#             token = generate_token(user)
+#             return Response({'token': token}, status=status.HTTP_201_CREATED)
+#         if "Email_Address" in serializer.errors:
+#             if "already exists" in str(serializer.errors["Email_Address"]):
+#                 return Response({'error': 'User with this email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 
@@ -71,34 +147,34 @@ class RegisterVerify(APIView):
 
 # dhanush login view
 
-class LoginView(APIView):
-    def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        try:
-            user = UserDetails.objects.get(Email_Address=email)
-        except UserDetails.DoesNotExist:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        print(email,password,user)
-        if user and password==user.Password and user.is_verified == False: 
-            otp = str(random.randint(000000, 999999))
-            EmailOTP.objects.update_or_create(
-                email=user,
-                defaults={'otp': otp}
-            )
+# class LoginView(APIView):
+#     def post(self, request):
+#         email = request.data.get('email')
+#         password = request.data.get('password')
+#         try:
+#             user = UserDetails.objects.get(Email_Address=email)
+#         except UserDetails.DoesNotExist:
+#             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+#         print(email,password,user)
+#         if user and password==user.Password and user.is_verified == False: 
+#             otp = str(random.randint(000000, 999999))
+#             EmailOTP.objects.update_or_create(
+#                 email=user,
+#                 defaults={'otp': otp}
+#             )
 
-            send_mail(
-                subject="Your OTP Code",
-                message=f"Yo bruh, your OTP is {otp}",
-                from_email="noreply@otp.com",
-                recipient_list=[user.Email_Address],
-            )
-            token = generate_token(user)
-            return Response({'token': token, 'verified': False}, status=status.HTTP_201_CREATED)
-        elif user and password==user.Password and user.is_verified == True:
-            token = generate_token(user)
-            return Response({'token': token, 'verified': True,'is_mentor':user.is_mentor}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+#             send_mail(
+#                 subject="Your OTP Code",
+#                 message=f"Yo bruh, your OTP is {otp}",
+#                 from_email="noreply@otp.com",
+#                 recipient_list=[user.Email_Address],
+#             )
+#             token = generate_token(user)
+#             return Response({'token': token, 'verified': False}, status=status.HTTP_201_CREATED)
+#         elif user and password==user.Password and user.is_verified == True:
+#             token = generate_token(user)
+#             return Response({'token': token, 'verified': True,'is_mentor':user.is_mentor}, status=status.HTTP_200_OK)
+#         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class ResetPasswordView(APIView):

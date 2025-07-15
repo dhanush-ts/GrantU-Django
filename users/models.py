@@ -34,7 +34,13 @@ class UserDetails(models.Model):
     Updated_At = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.User_ID} {self.First_Name}"
+        return str(f"{self.User_ID} - {self.First_Name}")
+
+    def delete(self, *args, **kwargs):
+    # Add any custom cleanup logic here if needed
+        print(f"Deleting user: {self.User_ID} - {self.First_Name}")
+        super(UserDetails, self).delete(*args, **kwargs)
+
     @property
     def is_authenticated(self):
         return True
@@ -44,9 +50,7 @@ class UserDetails(models.Model):
     @property
     def is_mentor(self):
         return self.Expertise is not None and self.Years_of_Experience is not None
-
     
-
 class Educational_levels(models.Model):
     Institution_name = models.CharField(max_length=255)
     Education_level = models.CharField(max_length=100)

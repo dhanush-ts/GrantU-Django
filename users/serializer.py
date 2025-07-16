@@ -183,4 +183,4 @@ class StudentSerializer(serializers.ModelSerializer):
 
     def get_request_pending(self, obj):
         user = self.context['request'].user
-        return Booking.objects.filter(Mentor=user, Mentee=obj, status='pending').exists()
+        return Booking.objects.filter(Mentor__in=[user,obj], Mentee__in=[obj,user], status='pending').exists()

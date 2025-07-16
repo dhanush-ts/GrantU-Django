@@ -29,9 +29,25 @@ class UserSerializer(serializers.ModelSerializer):
         
         
 class UserBasicDetailsSerializer(serializers.ModelSerializer):
+    your_student = serializers.SerializerMethodField()
+    request_pending = serializers.SerializerMethodField()
+    your_mentor = serializers.SerializerMethodField()
+    
     class Meta:
         model = UserDetails
-        fields = ['User_ID', 'First_Name', 'Last_Name','Expertise','Field_of_Interest','Requirements','organization_detail' ]
+        fields = ['User_ID', 'First_Name', 'Last_Name','Expertise','Field_of_Interest','Requirements','organization_detail', 'your_student', 'your_mentor', 'request_pending']
+        
+    def get_your_student(self, obj):
+        user = self.context['request'].user
+        return Booking.objects.filter(Mentor=user, Mentee=obj, status='accepted').exists()
+
+    def get_your_mentor(self, obj):
+        user = self.context['request'].user
+        return Booking.objects.filter(Mentor=obj, Mentee=user, status='accepted').exists()
+
+    def get_request_pending(self, obj):
+        user = self.context['request'].user
+        return Booking.objects.filter(Mentor__in=[user,obj], Mentee__in=[obj,user], status='pending').exists()
 
 class UserFieldUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -156,10 +172,10 @@ class BookingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid user type.")
 
         # Check limits
-        if Booking.objects.filter(Mentor=mentor).count() >= 3:
+        if Booking.objects.filter(Mentor=mentor,status="accepted").count() >= 3:
             raise serializers.ValidationError("This mentor already has 3 mentees.")
         
-        if Booking.objects.filter(Mentee=mentee).count() >= 5:
+        if Booking.objects.filter(Mentee=mentee,status="accepted").count() >= 5:
             raise serializers.ValidationError("This mentee already has 5 mentors.")
         
         return data

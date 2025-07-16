@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    .header {
+      background-color: #4CAF50;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .content {
+      padding: 30px;
+      color: #333;
+    }
+    .status {
+      font-size: 18px;
+      color: #333;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>GrantU Request Update</h1>
+    </div>
+    <div class="content">
+      <p>Hi {{ mentee_name }},</p>
+      <p>Good news! Your mentorship request has been accepted.</p>
+      <div class="status">
+        <strong>Mentor:</strong> {{ mentor_name }}<br>
+        <strong>Mentee:</strong> {{ mentee_name }}
+      </div>
+      <p>Get ready to connect and start your journey.</p>
+      <p>Cheers,<br><strong>GrantU Team</strong></p>
+    </div>
+    <div class="footer">
+      &copy; 2025 GrantU. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

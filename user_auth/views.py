@@ -350,5 +350,5 @@ class ListOfStudents(APIView):
     def get(self, request):
         user = request.user
         students = UserDetails.objects.all().exclude(User_ID=user.User_ID)
-        serializer = StudentSerializer(students, many=True, context={"request": request})
+        serializer = UserSerializer(students, many=True, context={"request": request})
         return Response({'students': serializer.data}, status=200)

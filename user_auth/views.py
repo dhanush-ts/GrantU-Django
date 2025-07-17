@@ -252,22 +252,6 @@ class GetMenteeRequest(APIView):
         serializer = BookingSerializer(bookings, many=True, context={"request": request})
         return Response({'data': serializer.data})
 
-
-# class AcceptRequest(APIView):
-#     authentication_classes = [IsAuthenticated]
-#     permission_classes = [IsOwner]
-
-#     def post(self, request, booking_id):
-#         user = request.user
-#         try:
-#             booking = Booking.objects.get(Booking_ID=booking_id)
-#         except Booking.DoesNotExist:
-#             return Response({'error': 'Invalid booking id'}, status=404)
-#         booking.status = "accepted"
-#         booking.save()
-#         return Response({"detail": "accepted successfully"})
-
-
 class AcceptRequest(APIView):
     authentication_classes = [IsAuthenticated]
     permission_classes = [IsOwner]
@@ -334,3 +318,50 @@ class ListOfStudents(APIView):
         students = UserDetails.objects.all().exclude(User_ID=user.User_ID)
         serializer = UserBasicDetailsSerializer(students, many=True, context={"request": request})
         return Response({'students': serializer.data}, status=200)
+    
+    
+class AcceptRequestUser(APIView):
+    authentication_classes = [IsAuthenticated]
+    permission_classes = [IsOwner]
+
+    def post(self, request, user_id):
+        user_type = request.query_params.get('type')
+        user = request.user
+        try:
+            another_user = UserDetails.objects.get(User_ID=user_id)
+            if user_type == 'mentee':
+                booking = Booking.objects.get(Mentor=another_user, Mentee=user, status='pending')
+            elif user_type == 'mentor':
+                booking = Booking.objects.get(Mentor=user, Mentee=another_user, status='pending')
+        except Booking.DoesNotExist:
+            return Response({'error': 'Invalid booking id'}, status=404)
+
+        booking.status = "accepted"
+        booking.save()
+
+        # Get mentor and mentee names
+        mentor_name = booking.Mentor.First_Name + " " + booking.Mentor.Last_Name
+        mentee_name = booking.Mentee.First_Name + " " + booking.Mentee.Last_Name
+
+        # Render email
+        email_html = render_to_string("request_accepted_email.html", {
+            "mentor_name": mentor_name,
+            "mentee_name": mentee_name
+        })
+        
+        sender_list = []
+        if booking.Selection_By == "mentor":
+            sender_list.append(booking.Mentor.Email_Address)
+        else:
+            sender_list.append(booking.Mentee.Email_Address)
+
+        # Send email to mentee
+        email = EmailMessage(
+            subject="Your request was accepted!",
+            body=email_html,
+            to=sender_list,
+        )
+        email.content_subtype = "html"
+        email.send(fail_silently=True)
+
+        return Response({"detail": "accepted successfully"})

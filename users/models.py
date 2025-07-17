@@ -104,4 +104,4 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True,null=True, blank=True) 
 
     def __str__(self):
-        return f"Booking {self.Booking_ID} ({self.Selection_By})"
+        return f"Booking {self.Mentor.First_Name} - {self.Mentee.First_Name} - {self.status} - {self.Selection_By}"

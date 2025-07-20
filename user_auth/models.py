@@ -7,4 +7,4 @@ class EmailOTP(models.Model):
     
 
     def __str__(self):
-        return self.email
+        return str(self.email)

@@ -36,14 +36,6 @@ class UserDetails(models.Model):
     def __str__(self):
         return str(f"{self.User_ID} - {self.First_Name}")
 
-    def delete(self, *args, **kwargs):
-    # Add any custom cleanup logic here if needed
-        print(f"Deleting user: {self.User_ID} - {self.First_Name}")
-        super(UserDetails, self).delete(*args, **kwargs)
-
-    @property
-    def is_authenticated(self):
-        return True
     @property
     def is_staff(self):
         return False
@@ -66,7 +58,7 @@ class Interest(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 class Booking(models.Model):
     Booking_ID = models.AutoField(primary_key=True)
     Mentor = models.ForeignKey(
@@ -105,3 +97,24 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"Booking {self.Mentor.First_Name} - {self.Mentee.First_Name} - {self.status} - {self.Selection_By}"
+
+class GmeetSchedule(models.Model):
+    Booking = models.ForeignKey(Booking, to_field='Booking_ID', on_delete=models.CASCADE)
+    Meeting_Link = models.URLField(max_length=200, blank=True, null=True)
+    Meeting_Start_Time = models.DateTimeField(default=timezone.now)
+    Meeting_End_Time = models.DateTimeField(null=True, blank=True)
+    Created_At = models.DateTimeField(auto_now_add=True)
+    Active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Gmeet for Booking {self.Booking.Booking_ID} at {self.Meeting_Time}"
+
+class FreeTimeSlots(models.Model):
+    User = models.ForeignKey(UserDetails, to_field='User_ID', on_delete=models.CASCADE)
+    Day = models.CharField(max_length=20)
+    Start_Time = models.TimeField()
+    End_Time = models.TimeField()
+    Created_At = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Free Slot for {self.User.First_Name} from {self.Start_Time} to {self.End_Time}"

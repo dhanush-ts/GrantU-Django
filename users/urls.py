@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import *
-from user_auth.views import AcceptRequest, RejectRequest,ListOfStudents,AcceptRequestUser
+from user_auth.views import AcceptRequest, RejectRequest,ListOfStudents,AcceptRequestUser, GetMentorRequest, GetMenteeRequest
+from users.views import FreeTimeSlotView, GmeetScheduleView
 
 urlpatterns = [
     path('requests/mentor/',GetMentorRequest.as_view(),name="Mentor-Request"),
@@ -9,6 +10,8 @@ urlpatterns = [
     path('requests/user/<int:user_id>/',AcceptRequestUser.as_view(),name="accept-Request-user-id"),
     path('requests/reject/<int:booking_id>/',RejectRequest.as_view(),name="accept-Request"),
     path('list/',ListOfStudents.as_view(),name="list-students"),
+    path('freetime/', FreeTimeSlotView.as_view(), name='freetime'),
+    path('schedule-meeting/', GmeetScheduleView.as_view(), name='schedule-meeting'),
 
     path('users/', UserListView.as_view(), name='user-list'),
     path('profile/', ProfileView.as_view(), name='user-profile'),

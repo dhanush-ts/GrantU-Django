@@ -319,7 +319,6 @@ class ListOfStudents(APIView):
         serializer = UserBasicDetailsSerializer(students, many=True, context={"request": request})
         return Response({'students': serializer.data}, status=200)
     
-    
 class AcceptRequestUser(APIView):
     authentication_classes = [IsAuthenticated]
     permission_classes = [IsOwner]

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "grantu",
+  "private_key_id": "1291e8c1173b8d5fae023ccf6c4248df3c248382",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDDco+MtCJSgoOC\n8Om7R6MAiu36D9fKQeGqzctjLw+HngNX2tQkKSTEgS/F9wg+c+mobPdSaDDmggMu\n/Ftu1BV1KfVVo3/i+4N7a5AfaekzcrrntOlyzns6toJNXrmcCMwrLmcHOgHtsih6\nXgHjYgkuDyl6Z+04cWUgt9pBPYD7pi/XEttmsU1HO/6PzwN7E+jgnPxekcmSu4Z5\nXJyBoGuyqG39queX22JiUfE8LrwB1eg6Aqt+QL0oTtvEhcuZjAgSfZzUN+gETCdy\nttvaM9zJ9xI0eKInXgxtq15OAjXpxsaaspIioUBj2/SpPEsfnFUpF0okTKxkcRJB\ndyogk2gNAgMBAAECggEAFGpsU8SCPE+tSJl9NMaiIH2ip6cNga9ZkQOvrePd0asA\nCuaNF9zjXhJniNyJ1Co7+0+skwNWrlFg30DVlTFar3MrUR+DzZQ7swH0m09vIGRo\n4Si85PTsGuEzIb1WEpY5q34MnYzh5DAiucuFk3irYFANo19lQGrZ5y3FQuDXjxGp\nfBsv/egmMVYS2x4HXjZ8KRTanAMPh5stFKzIE8JLnj6AgolaW/eHycDzEIkhqhba\nTxqO5cCvxEHU8i3WUvHLITU4m7GJx9WRp5MMZhw/AhvyklvpABFcE35B93Rek/EI\nTvz51SSlnlz5kbDBAA6Eb+ZJx3G7nUnvlMOTTVFDUQKBgQDiZZyQhw66V9BZnTmI\n/a+QYFywJSFiDmVmLGA1qFSDQL6TQW+w4GtOK1Ex6/1gQ6/UMDdpnLMRIBFylYGf\nO3a9e9dRp5sYvLqcZcSfm/x9q6m4mgmX3wusi6vj7xujrhUeYkH/60W+Du0nJw9M\nXA7BlebfEQIfS7FO5zCDlRD20QKBgQDdAPON5F6hzOwsuS+pGB8HUoGx/eYuCKvZ\nKVM+SFZ3qwo4Va3rOy+n3pwfd4aHRa25ivjjnTqPUuyepkAgoi0I4nStPz+q+5Fg\nE+wYGCk2gyZnvJOUrxb5ztuSDYP8eK6NpBAF1EdomnKPEhIekQMtE7ypzCyHng/g\n3m9fK52kfQKBgQCpm8phlGz6OZODr4BNGxEOLsMBy69o0LQyiYhCaqt18WlU1K8i\nad66H0WjCtM17T+qzbyVyKl2aPnpSAxmCJx6dG7pY5GURL/hL3TQxoGwfIyYGf6Z\n4qXSTIkoKBgi1eZIbwBXBCGps3ED5gVWBZmgefcOoqVeYMyi+hykV2bwIQKBgH6Q\nuOqdyoQm82p5c44HPl3XJmdk3JmoZaIsRHv6uWo3DddNWhjJAHXGyupKbUSy5tbH\ne9n+hTbnapNA6qDFv7zC08cT3cZx48N+JUt3KsMJQMlP+cTAsQvHJ3/xNZE1G+IJ\n/xMXiv2g1dKRqsbOjV8XWohzYV0ZbEZ/nJCITfORAoGBAJa/JK9/C2CY5iwc3jn+\n9NkDmcr8WbM5jwHWkM9O6V4cHkSdIhbxG6+znodydtLx/zCaJwkB5zAbhhTKC5N5\nqEIxzreXcrreCruv8T7+jTD1f1LOWAU0rNjEuLoXWkzBg3qByrbhF6MlGs04cnrE\nYo6Z0wjmNS5C0QHbLnzkr5Sg\n-----END PRIVATE KEY-----\n",
+  "client_email": "django-meet-scheduler@grantu.iam.gserviceaccount.com",
+  "client_id": "100894754902852323062",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/django-meet-scheduler%40grantu.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

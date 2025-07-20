@@ -8,12 +8,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from django.conf import settings
 from rest_framework.response import Response
-from rest_framework import permissions
 from rest_framework import generics
 from .models import Booking,Interest
 from user_auth.views import GetMentorRequest,GetMenteeRequest
 from .serializer import BookingSerializer
 from django.shortcuts import get_object_or_404
+from collections import defaultdict, OrderedDict
+from user_auth.permission import BookingOwner
 
 
 
@@ -205,3 +206,44 @@ class InterestListView(APIView):
     def get(self, request):
         interests = Interest.objects.all().values_list('name', flat=True)
         return Response(list(interests))
+    
+class FreeTimeSlotView(APIView):
+    authentication_classes = [IsAuthenticated]
+
+    def get(self, request):
+        slots = FreeTimeSlots.objects.filter(User=request.user)
+        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        grouped = defaultdict(list)
+
+        for slot in slots:
+            day = slot.Day.capitalize()
+            serialized = FreeTimeSlotSerializer(slot).data
+            grouped[day].append(serialized)
+
+        result = OrderedDict()
+        for day in day_order:
+            result[day] = grouped.get(day, [])
+        return Response(result)
+
+    def post(self, request):
+        serializer = FreeTimeSlotSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Slot created successfully", "data": serializer.data}, status=201)
+        return Response(serializer.errors, status=400)
+
+class GmeetScheduleView(APIView):
+    authentication_classes = [IsAuthenticated]
+    permission_classes = [BookingOwner]
+
+    def post(self, request):
+        serializer = GmeetScheduleSerializer(data=request.data)
+        if serializer.is_valid():
+            schedule = serializer.save()
+            return Response({
+                "message": "Meeting scheduled",
+                "meeting_link": schedule.Meeting_Link,
+                "start": schedule.Meeting_Start_Time,
+                "end": schedule.Meeting_End_Time
+            }, status=201)
+        return Response(serializer.errors, status=400)

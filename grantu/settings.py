@@ -130,4 +130,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'aswinksatheesh07@gmail.com'         # your Gmail
 EMAIL_HOST_PASSWORD = 'azbikukouqwaydcx'       # Not your Gmail password ❌
 DEFAULT_FROM_EMAIL = 'youremail@gmail.com'
-GOOGLE_CALENDAR_ID = 'a4ae7e59748d8ccfa1aad15aa02349c207092a9bf3f7b32551ea86207e3b7590@group.calendar.google.com'
+GOOGLE_CALENDAR_ID = 'c_b8edf6cc6bb0e0f65a7f83b5357da6f16f3dc326722d42026525170452e0c39d@group.calendar.google.com'

@@ -9,7 +9,7 @@ class Helper:
         credentials = service_account.Credentials.from_service_account_file(
             'utils/grantu-1291e8c1173b.json',
             scopes=['https://www.googleapis.com/auth/calendar']
-        )
+        ).with_subject('admin@grantu.education')  
         service = build('calendar', 'v3', credentials=credentials)
 
         event = {
@@ -17,6 +17,10 @@ class Helper:
             'description': booking.Description or 'Mentorship Session',
             'start': {'dateTime': start_time.isoformat(), 'timeZone': 'Asia/Kolkata'},
             'end': {'dateTime': end_time.isoformat(), 'timeZone': 'Asia/Kolkata'},
+            'attendees': [
+                {'email': booking.Mentor.Email_Address},
+                {'email': booking.Mentee.Email_Address},
+            ],
             'conferenceData': {
                 'createRequest': {
                     'requestId': f"{booking.Booking_ID}-meet",
@@ -30,6 +34,7 @@ class Helper:
             body=event,
             conferenceDataVersion=1
         ).execute()
+        
+        print(event)
 
         return event['hangoutLink']
-        

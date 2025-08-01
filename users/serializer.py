@@ -217,15 +217,18 @@ class FreeTimeSlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = FreeTimeSlots
         fields = ['id', 'Day', 'Start_Time', 'End_Time', 'Created_At']
-
+        
     def create(self, validated_data):
         validated_data['User'] = self.context['request'].user
         return super().create(validated_data)
 
 class GmeetScheduleSerializer(serializers.ModelSerializer):
+    Mentee = serializers.SerializerMethodField(read_only=True)
+    Mentor = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = GmeetSchedule
-        fields = ['Booking', 'Meeting_Start_Time', 'Meeting_End_Time', 'Meeting_Link']
+        read_only_fields = ['Mentee', 'Mentor']
+        fields = ['Booking', 'Meeting_Start_Time', 'Meeting_End_Time', 'Meeting_Link', 'Mentee', 'Mentor','Description']
 
     def create(self, validated_data):
         from django.conf import settings
@@ -234,11 +237,18 @@ class GmeetScheduleSerializer(serializers.ModelSerializer):
         booking = validated_data['Booking']
         start = validated_data['Meeting_Start_Time']
         end = validated_data['Meeting_End_Time']
-        link = Helper.create_gmeet_link(self,booking, start, end)
+        description = validated_data['Description']
+        link = Helper.create_gmeet_link(self,booking, start, end, description)
 
         return GmeetSchedule.objects.create(
             Booking=booking,
             Meeting_Link=link,
             Meeting_Start_Time=start,
-            Meeting_End_Time=end
+            Meeting_End_Time=end,
+            Description=description
         )
+        
+    def get_Mentee(self, obj):
+        return obj.Booking.Mentee.First_Name if obj.Booking.Mentee else None
+    def get_Mentor(self, obj):
+        return obj.Booking.Mentor.First_Name if obj.Booking.Mentor else None

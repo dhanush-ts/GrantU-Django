@@ -108,8 +108,6 @@ class Fieldofinterest(APIView):
             "Mechanical Engineering": ["mechanical", "machines", "automobile", "thermodynamics"],
             "Electrical Engineering": ["electrical", "circuit", "power", "eectronics", "vlsi"],}
 
-
-
         cleaned_interests = []
         for raw in raw_interests:
             raw_lower = raw.strip().lower()
@@ -120,7 +118,7 @@ class Fieldofinterest(APIView):
                     matched = True
                     break
             if not matched:
-                cleaned_interests.append(raw.strip())  # Keep raw if no match
+                cleaned_interests.append(raw.strip())
 
         # Save to user model
         user_details.Field_of_Interest = cleaned_interests
@@ -135,8 +133,6 @@ class Fieldofinterest(APIView):
 
 class ExpertField(APIView):
     authentication_classes = [IsAuthenticated]
-    # permission_class = [permissions.IsAuthenticated]
-
 
     def patch(self, request):
 
@@ -156,13 +152,10 @@ class ExpertField(APIView):
 
 class ProfileUpdate(APIView):
     authentication_classes = [IsAuthenticated]
-    # permission_class = [permissions.IsAuthenticated]
-
 
     def patch(self, request):
         user = request.user
 
-        # Make sure field name matches your actual model
         user_details = get_object_or_404(UserDetails, Email_Address=user.Email_Address)
 
         serializer = ProfileEditSerializer(user_details, data=request.data, partial=True)
@@ -185,8 +178,6 @@ class Metrics(APIView):
         count_stus = UserDetails.objects.all().count()
         count_ments = UserDetails.objects.filter(organization_detail__isnull=False).count()
         return Response({"students":count_stus, "ments":count_ments})
-
-
 
 class BookingCreateView(generics.CreateAPIView):
     queryset = Booking.objects.all()
@@ -211,7 +202,15 @@ class FreeTimeSlotView(APIView):
     authentication_classes = [IsAuthenticated]
 
     def get(self, request):
-        slots = FreeTimeSlots.objects.filter(User=request.user)
+        user_id = request.query_params.get("id")
+        if user_id:
+            try:
+                user = UserDetails.objects.get(User_ID=user_id)
+            except UserDetails.DoesNotExist:
+                return Response({"error": "User not found."}, status=404)
+        else:
+            user = request.user
+        slots = FreeTimeSlots.objects.filter(User=user)
         day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         grouped = defaultdict(list)
 
@@ -245,7 +244,6 @@ class GmeetScheduleView(APIView):
             booking = Booking.objects.get(pk=booking_id)
         except Booking.DoesNotExist:
             return Response({"error": "Booking not found"}, status=404)
-        print(booking)
         self.check_object_permissions(request, booking)
         serializer = GmeetScheduleSerializer(data=request.data)
         if serializer.is_valid():
@@ -254,6 +252,27 @@ class GmeetScheduleView(APIView):
                 "message": "Meeting scheduled",
                 "meeting_link": schedule.Meeting_Link,
                 "start": schedule.Meeting_Start_Time,
-                "end": schedule.Meeting_End_Time
+                "end": schedule.Meeting_End_Time,
+                "description": schedule.Description
             }, status=201)
         return Response(serializer.errors, status=400)
+    
+    def get(self, request):
+        user = request.user
+        bookings = Booking.objects.filter(Mentor=user) | Booking.objects.filter(Mentee=user)
+        schedules = GmeetSchedule.objects.filter(Booking__in=bookings).order_by('Meeting_Start_Time')
+
+        now = timezone.now()
+
+        # Separate into upcoming and completed
+        upcoming_schedules = schedules.filter(Meeting_End_Time__gte=now)
+        completed_schedules = schedules.filter(Meeting_End_Time__lt=now)
+
+        # Serialize separately
+        upcoming_data = GmeetScheduleSerializer(upcoming_schedules, many=True).data
+        completed_data = GmeetScheduleSerializer(completed_schedules, many=True).data
+
+        return Response({
+            "upcoming": upcoming_data,
+            "completed": completed_data
+        }, status=200)

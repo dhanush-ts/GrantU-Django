@@ -103,6 +103,7 @@ class GmeetSchedule(models.Model):
     Meeting_Link = models.URLField(max_length=200, blank=True, null=True)
     Meeting_Start_Time = models.DateTimeField(default=timezone.now)
     Meeting_End_Time = models.DateTimeField(null=True, blank=True)
+    Description = models.TextField(blank=True, null=True)
     Created_At = models.DateTimeField(auto_now_add=True)
     Active = models.BooleanField(default=True)
 

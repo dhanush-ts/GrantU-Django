@@ -107,7 +107,7 @@ class GmeetSchedule(models.Model):
     Active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Gmeet for Booking {self.Booking.Booking_ID} at {self.Meeting_Time}"
+        return f"Gmeet for Booking {self.Booking.Booking_ID}"
 
 class FreeTimeSlots(models.Model):
     User = models.ForeignKey(UserDetails, to_field='User_ID', on_delete=models.CASCADE)

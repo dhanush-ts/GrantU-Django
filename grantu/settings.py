@@ -130,4 +130,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'aswinksatheesh07@gmail.com'         # your Gmail
 EMAIL_HOST_PASSWORD = 'azbikukouqwaydcx'       # Not your Gmail password ❌
 DEFAULT_FROM_EMAIL = 'youremail@gmail.com'
-GOOGLE_CALENDAR_ID = 'c_b8edf6cc6bb0e0f65a7f83b5357da6f16f3dc326722d42026525170452e0c39d@group.calendar.google.com'
+GOOGLE_CALENDAR_ID = 'admin@grantu.education'

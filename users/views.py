@@ -237,6 +237,16 @@ class GmeetScheduleView(APIView):
     permission_classes = [BookingOwner]
 
     def post(self, request):
+        booking_id = request.data.get("Booking")
+        if not booking_id:
+            return Response({"error": "booking_id is required"}, status=400)
+
+        try:
+            booking = Booking.objects.get(pk=booking_id)
+        except Booking.DoesNotExist:
+            return Response({"error": "Booking not found"}, status=404)
+        print(booking)
+        self.check_object_permissions(request, booking)
         serializer = GmeetScheduleSerializer(data=request.data)
         if serializer.is_valid():
             schedule = serializer.save()

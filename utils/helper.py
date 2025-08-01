@@ -28,13 +28,13 @@ class Helper:
                 }
             },
         }
-
+        
         event = service.events().insert(
             calendarId=settings.GOOGLE_CALENDAR_ID,
             body=event,
-            conferenceDataVersion=1
+            conferenceDataVersion=1,
+            sendUpdates='all'  # This sends emails to attendees
         ).execute()
-        
-        print(event)
+
 
         return event['hangoutLink']

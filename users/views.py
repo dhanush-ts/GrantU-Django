@@ -259,9 +259,19 @@ class GmeetScheduleView(APIView):
         start_dt = parse_datetime(start_time_str)
         end_dt = parse_datetime(end_time_str)
         
+        free_slots = FreeTimeSlots.objects.filter(User=booking.Mentor, Day=request.data["Day"])
+        
+        within_slot = False
+        for slot in free_slots:
+            if slot.Start_Time <= start_dt.time() and slot.End_Time >= end_dt.time():
+                within_slot = True
+                break
+
+        if not within_slot:
+            return Response({"error": "No free time slot available for the mentor during this period."}, status=400)
+        
         if end_dt - start_dt < timedelta(minutes=15):
             return Response({"error": "Meeting must be at least 15 minutes long."}, status=400)
-
         
         overlapping_meetings = GmeetSchedule.objects.filter(
             Q(Booking__Mentor=booking.Mentor) | Q(Booking__Mentee=booking.Mentor),

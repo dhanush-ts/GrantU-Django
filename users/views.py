@@ -17,7 +17,7 @@ from collections import defaultdict, OrderedDict
 from user_auth.permission import BookingOwner
 from django.db.models import Q
 from django.utils.dateparse import parse_datetime
-from django.utils.timezone import now
+from django.utils.timezone import make_aware, is_naive
 from datetime import timedelta
 
 
@@ -259,6 +259,11 @@ class GmeetScheduleView(APIView):
         start_dt = parse_datetime(start_time_str)
         end_dt = parse_datetime(end_time_str)
         
+        if is_naive(start_dt):
+            start_dt = make_aware(start_dt)
+        if is_naive(end_dt):
+            end_dt = make_aware(end_dt)
+        
         free_slots = FreeTimeSlots.objects.filter(User=booking.Mentor, Day=start_dt.strftime('%A'))
         
         within_slot = False
@@ -267,7 +272,7 @@ class GmeetScheduleView(APIView):
                 within_slot = True
                 break
 
-        if not within_slot:
+        if not within_slot and not booking.Mentor==request.user:
             return Response({"error": "No free time slot available for the mentor during this period."}, status=400)
         
         if end_dt - start_dt < timedelta(minutes=15):
@@ -290,7 +295,7 @@ class GmeetScheduleView(APIView):
             return Response({
                 "error": "Mentor not available at this time.",
                 "todays_bookings": serialized
-            }, status=400)
+            }, status=203)
 
         # Save meeting
         serializer = GmeetScheduleSerializer(data=request.data)

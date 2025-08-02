@@ -259,7 +259,7 @@ class GmeetScheduleView(APIView):
         start_dt = parse_datetime(start_time_str)
         end_dt = parse_datetime(end_time_str)
         
-        free_slots = FreeTimeSlots.objects.filter(User=booking.Mentor, Day=request.data["Day"])
+        free_slots = FreeTimeSlots.objects.filter(User=booking.Mentor, Day=start_dt.strftime('%A'))
         
         within_slot = False
         for slot in free_slots:

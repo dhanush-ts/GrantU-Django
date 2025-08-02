@@ -15,6 +15,10 @@ from .serializer import BookingSerializer
 from django.shortcuts import get_object_or_404
 from collections import defaultdict, OrderedDict
 from user_auth.permission import BookingOwner
+from django.db.models import Q
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import now
+from datetime import timedelta
 
 
 
@@ -245,6 +249,40 @@ class GmeetScheduleView(APIView):
         except Booking.DoesNotExist:
             return Response({"error": "Booking not found"}, status=404)
         self.check_object_permissions(request, booking)
+        
+        start_time_str = request.data.get("Meeting_Start_Time")
+        end_time_str = request.data.get("Meeting_End_Time")
+        
+        if not start_time_str or not end_time_str:
+            return Response({"error": "Meeting_Start_Time and Meeting_End_Time are required"}, status=400)
+        
+        start_dt = parse_datetime(start_time_str)
+        end_dt = parse_datetime(end_time_str)
+        
+        if end_dt - start_dt < timedelta(minutes=15):
+            return Response({"error": "Meeting must be at least 15 minutes long."}, status=400)
+
+        
+        overlapping_meetings = GmeetSchedule.objects.filter(
+            Q(Booking__Mentor=booking.Mentor) | Q(Booking__Mentee=booking.Mentor),
+            Meeting_Start_Time__lt=end_dt,
+            Meeting_End_Time__gt=start_dt
+        )
+
+        
+        todays_bookings = GmeetSchedule.objects.filter(
+            Q(Booking__Mentor=booking.Mentor) | Q(Booking__Mentee=booking.Mentor),
+            Meeting_Start_Time__date=str(start_dt.date())
+        ).order_by('Meeting_Start_Time')
+
+        if overlapping_meetings.exists():
+            serialized = GmeetScheduleSerializer(todays_bookings, many=True).data
+            return Response({
+                "error": "Mentor not available at this time.",
+                "todays_bookings": serialized
+            }, status=400)
+
+        # Save meeting
         serializer = GmeetScheduleSerializer(data=request.data)
         if serializer.is_valid():
             schedule = serializer.save()
@@ -255,6 +293,7 @@ class GmeetScheduleView(APIView):
                 "end": schedule.Meeting_End_Time,
                 "description": schedule.Description
             }, status=201)
+
         return Response(serializer.errors, status=400)
     
     def get(self, request):

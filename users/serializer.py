@@ -241,7 +241,7 @@ class GmeetScheduleSerializer(serializers.ModelSerializer):
         
         start = start - timedelta(hours=5, minutes=30)
         end = end - timedelta(hours=5, minutes=30)
-        
+    
         link = Helper.create_gmeet_link(self,booking, start, end, description)
 
         return GmeetSchedule.objects.create(

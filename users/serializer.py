@@ -238,6 +238,10 @@ class GmeetScheduleSerializer(serializers.ModelSerializer):
         start = validated_data['Meeting_Start_Time']
         end = validated_data['Meeting_End_Time']
         description = validated_data['Description']
+        
+        start = start - timedelta(hours=5, minutes=30)
+        end = end - timedelta(hours=5, minutes=30)
+        
         link = Helper.create_gmeet_link(self,booking, start, end, description)
 
         return GmeetSchedule.objects.create(

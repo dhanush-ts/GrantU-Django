@@ -257,8 +257,8 @@ class GmeetScheduleView(APIView):
         if not start_time_str or not end_time_str:
             return Response({"error": "Meeting_Start_Time and Meeting_End_Time are required"}, status=400)
 
-        start_dt = parse_datetime(start_time_str) - timedelta(hours=5, minutes=30)
-        end_dt = parse_datetime(end_time_str) - timedelta(hours=5, minutes=30)
+        start_dt = parse_datetime(start_time_str) + timedelta(hours=5, minutes=30)
+        end_dt = parse_datetime(end_time_str) + timedelta(hours=5, minutes=30)
 
         free_slots = FreeTimeSlots.objects.filter(User=booking.Mentor, Day=start_dt.strftime('%A'))
 

@@ -18,7 +18,7 @@ from user_auth.permission import BookingOwner
 from django.db.models import Q
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import make_aware, is_naive
-from datetime import timedelta, timezone
+from datetime import timedelta
 import pytz
 
 
@@ -235,8 +235,6 @@ class FreeTimeSlotView(APIView):
             serializer.save()
             return Response({"message": "Slot created successfully", "data": serializer.data}, status=201)
         return Response(serializer.errors, status=400)
-    
-IST = timezone(timedelta(hours=5, minutes=30))
 
 class GmeetScheduleView(APIView):
     authentication_classes = [IsAuthenticated]
@@ -259,18 +257,8 @@ class GmeetScheduleView(APIView):
         if not start_time_str or not end_time_str:
             return Response({"error": "Meeting_Start_Time and Meeting_End_Time are required"}, status=400)
 
-        start_dt = parse_datetime(start_time_str)
-        end_dt = parse_datetime(end_time_str)
-
-        if is_naive(start_dt):
-            start_dt = make_aware(start_dt, timezone=IST)
-        else:
-            start_dt = start_dt.astimezone(IST)
-
-        if is_naive(end_dt):
-            end_dt = make_aware(end_dt, timezone=IST)
-        else:
-            end_dt = end_dt.astimezone(IST)
+        start_dt = parse_datetime(start_time_str) - timedelta(hours=5, minutes=30)
+        end_dt = parse_datetime(end_time_str) - timedelta(hours=5, minutes=30)
 
         free_slots = FreeTimeSlots.objects.filter(User=booking.Mentor, Day=start_dt.strftime('%A'))
 

@@ -236,7 +236,7 @@ class FreeTimeSlotView(APIView):
             return Response({"message": "Slot created successfully", "data": serializer.data}, status=201)
         return Response(serializer.errors, status=400)
     
-IST = pytz.timezone("Asia/Kolkata")
+IST = timezone(timedelta(hours=5, minutes=30))
 
 class GmeetScheduleView(APIView):
     authentication_classes = [IsAuthenticated]

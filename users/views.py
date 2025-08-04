@@ -274,6 +274,9 @@ class GmeetScheduleView(APIView):
         if end_dt - start_dt < timedelta(minutes=15):
             return Response({"error": "Meeting must be at least 15 minutes long."}, status=400)
 
+        start_dt = parse_datetime(start_time_str) - timedelta(hours=5, minutes=30)
+        end_dt = parse_datetime(end_time_str) - timedelta(hours=5, minutes=30)
+
         overlapping_meetings = GmeetSchedule.objects.filter(
             Q(Booking__Mentor=booking.Mentor) | Q(Booking__Mentee=booking.Mentor),
             Meeting_Start_Time__lt=end_dt,

@@ -19,6 +19,7 @@ from django.db.models import Q
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import make_aware, is_naive
 from datetime import timedelta
+import pytz
 
 
 
@@ -234,6 +235,8 @@ class FreeTimeSlotView(APIView):
             serializer.save()
             return Response({"message": "Slot created successfully", "data": serializer.data}, status=201)
         return Response(serializer.errors, status=400)
+    
+IST = pytz.timezone("Asia/Kolkata")
 
 class GmeetScheduleView(APIView):
     authentication_classes = [IsAuthenticated]
@@ -249,45 +252,49 @@ class GmeetScheduleView(APIView):
         except Booking.DoesNotExist:
             return Response({"error": "Booking not found"}, status=404)
         self.check_object_permissions(request, booking)
-        
+
         start_time_str = request.data.get("Meeting_Start_Time")
         end_time_str = request.data.get("Meeting_End_Time")
-        
+
         if not start_time_str or not end_time_str:
             return Response({"error": "Meeting_Start_Time and Meeting_End_Time are required"}, status=400)
-        
+
         start_dt = parse_datetime(start_time_str)
         end_dt = parse_datetime(end_time_str)
-        
+
         if is_naive(start_dt):
-            start_dt = make_aware(start_dt)
+            start_dt = make_aware(start_dt, timezone=IST)
+        else:
+            start_dt = start_dt.astimezone(IST)
+
         if is_naive(end_dt):
-            end_dt = make_aware(end_dt)
-        
+            end_dt = make_aware(end_dt, timezone=IST)
+        else:
+            end_dt = end_dt.astimezone(IST)
+
         free_slots = FreeTimeSlots.objects.filter(User=booking.Mentor, Day=start_dt.strftime('%A'))
-        
+
         within_slot = False
         for slot in free_slots:
             if slot.Start_Time <= start_dt.time() and slot.End_Time >= end_dt.time():
                 within_slot = True
                 break
 
-        if not within_slot and not booking.Mentor==request.user:
+        if not within_slot and not booking.Mentor == request.user:
             return Response({"error": "No free time slot available for the mentor during this period."}, status=400)
-        
+
         if end_dt - start_dt < timedelta(minutes=15):
             return Response({"error": "Meeting must be at least 15 minutes long."}, status=400)
-        
+
         overlapping_meetings = GmeetSchedule.objects.filter(
             Q(Booking__Mentor=booking.Mentor) | Q(Booking__Mentee=booking.Mentor),
             Meeting_Start_Time__lt=end_dt,
             Meeting_End_Time__gt=start_dt
         )
 
-        
         todays_bookings = GmeetSchedule.objects.filter(
             Q(Booking__Mentor=booking.Mentor) | Q(Booking__Mentee=booking.Mentor),
-            Meeting_Start_Time__date=str(start_dt.date())
+            Meeting_Start_Time__date=start_dt.date()
         ).order_by('Meeting_Start_Time')
 
         if overlapping_meetings.exists():

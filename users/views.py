@@ -18,7 +18,7 @@ from user_auth.permission import BookingOwner
 from django.db.models import Q
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import make_aware, is_naive
-from datetime import timedelta
+from datetime import timedelta, timezone
 import pytz
 
 

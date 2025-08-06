@@ -37,8 +37,6 @@ class Fieldofinterest(APIView):
 
     def patch(self, request):
         print("User:", request.user)
-        print("Is Authenticated:", request.user.is_authenticated)
-        print("Is Staff:", request.user.is_staff)
 
         user = request.user
         user_details = get_object_or_404(UserDetails, Email_Address=user.Email_Address)

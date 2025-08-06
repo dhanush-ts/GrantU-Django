@@ -10,7 +10,7 @@ class IsOwner(BasePermission):
             return obj.Mentee == request.user or obj.Mentor == request.user
         return (obj.Mentee == request.user and obj.Selection_By=="mentor") or (obj.Mentor == request.user and obj.Selection_By=="mentee")
 
-class BookingOwner(BasePermission):
+class ConnectionOwner(BasePermission):
     def has_permission(self, request, view):
         return request.user is not None
 

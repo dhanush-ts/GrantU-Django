@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'scholar',
     'corsheaders',
     'user_auth',
+    'connections',  # Connections app
 ]
 
 MIDDLEWARE = [

@@ -1,10 +1,5 @@
-from django.shortcuts import render
-from .permission import IsOwner
 from django.core.mail import send_mail
 from django.utils import timezone
-from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import EmailOTP
@@ -12,10 +7,9 @@ import random
 from rest_framework import status
 from users.serializer import *
 from users.authentication import *
-from rest_framework import generics, mixins
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.core.mail import EmailMessage
+from connections.serializers import *
 
 class RegisterView(APIView):
     def post(self, request):
@@ -223,144 +217,3 @@ class SetNewPasswordView(APIView):
             'token': token
         }, status=200)
 
-class GetMentorRequest(APIView):
-    authentication_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        accepted_only = request.query_params.get('accepted_only') == 'true'
-        
-        bookings = Booking.objects.filter(Mentor=user)
-        if accepted_only:
-            bookings = bookings.filter(status='accepted')
-        
-        serializer = BookingSerializer(bookings, many=True, context={"request": request})
-        return Response({'data': serializer.data})
-
-
-class GetMenteeRequest(APIView):
-    authentication_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        accepted_only = request.query_params.get('accepted_only') == 'true'
-        
-        bookings = Booking.objects.filter(Mentee=user)
-        if accepted_only:
-            bookings = bookings.filter(status='accepted')
-        
-        serializer = BookingSerializer(bookings, many=True, context={"request": request})
-        return Response({'data': serializer.data})
-
-class AcceptRequest(APIView):
-    authentication_classes = [IsAuthenticated]
-    permission_classes = [IsOwner]
-
-    def post(self, request, booking_id):
-        user = request.user
-        try:
-            booking = Booking.objects.get(Booking_ID=booking_id)
-        except Booking.DoesNotExist:
-            return Response({'error': 'Invalid booking id'}, status=404)
-
-        booking.status = "accepted"
-        booking.save()
-
-        # Get mentor and mentee names
-        mentor_name = booking.Mentor.First_Name + " " + booking.Mentor.Last_Name
-        mentee_name = booking.Mentee.First_Name + " " + booking.Mentee.Last_Name
-
-        # Render email
-        email_html = render_to_string("request_accepted_email.html", {
-            "mentor_name": mentor_name,
-            "mentee_name": mentee_name
-        })
-        
-        sender_list = []
-        if booking.Selection_By == "mentor":
-            sender_list.append(booking.Mentor.Email_Address)
-        else:
-            sender_list.append(booking.Mentee.Email_Address)
-
-        # Send email to mentee
-        email = EmailMessage(
-            subject="Your request was accepted!",
-            body=email_html,
-            to=sender_list,
-        )
-        email.content_subtype = "html"
-        email.send(fail_silently=True)
-
-        return Response({"detail": "accepted successfully"})
-    
-class RejectRequest(APIView):
-    authentication_classes = [IsAuthenticated]
-    permission_classes = [IsOwner]
-
-    def delete(self, request, booking_id):
-        user = request.user
-        try:
-            booking = Booking.objects.get(Booking_ID=booking_id)
-        except Booking.DoesNotExist:
-            return Response({'error': 'Invalid booking id'}, status=404)
-        if booking.status != "pending":
-            return Response({'error': 'Booking is not in pending status'}, status=400)
-        self.check_object_permissions(request, booking)
-        booking.status = "rejected"
-        booking.save()
-        return Response({"detail": "rejected successfully"})
-    
-class ListOfStudents(APIView):
-    authentication_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        students = UserDetails.objects.all().exclude(User_ID=user.User_ID)
-        serializer = UserBasicDetailsSerializer(students, many=True, context={"request": request})
-        return Response({'students': serializer.data}, status=200)
-    
-class AcceptRequestUser(APIView):
-    authentication_classes = [IsAuthenticated]
-    permission_classes = [IsOwner]
-
-    def post(self, request, user_id):
-        user_type = request.query_params.get('type')
-        user = request.user
-        try:
-            another_user = UserDetails.objects.get(User_ID=user_id)
-            if user_type == 'mentee':
-                booking = Booking.objects.get(Mentor=another_user, Mentee=user, status='pending')
-            elif user_type == 'mentor':
-                booking = Booking.objects.get(Mentor=user, Mentee=another_user, status='pending')
-        except Booking.DoesNotExist:
-            return Response({'error': 'Invalid booking id'}, status=404)
-
-        booking.status = "accepted"
-        booking.save()
-
-        # Get mentor and mentee names
-        mentor_name = booking.Mentor.First_Name + " " + booking.Mentor.Last_Name
-        mentee_name = booking.Mentee.First_Name + " " + booking.Mentee.Last_Name
-
-        # Render email
-        email_html = render_to_string("request_accepted_email.html", {
-            "mentor_name": mentor_name,
-            "mentee_name": mentee_name
-        })
-        
-        sender_list = []
-        if booking.Selection_By == "mentor":
-            sender_list.append(booking.Mentor.Email_Address)
-        else:
-            sender_list.append(booking.Mentee.Email_Address)
-
-        # Send email to mentee
-        email = EmailMessage(
-            subject="Your request was accepted!",
-            body=email_html,
-            to=sender_list,
-        )
-        email.content_subtype = "html"
-        email.send(fail_silently=True)
-
-        return Response({"detail": "accepted successfully"})

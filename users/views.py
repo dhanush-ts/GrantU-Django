@@ -6,20 +6,11 @@ from .authentication import IsAuthenticated, generate_token
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import generics
-from .models import Booking,Interest
-from user_auth.views import GetMentorRequest,GetMenteeRequest
-from .serializer import BookingSerializer
+from .models import Interest
 from django.shortcuts import get_object_or_404
-from collections import defaultdict, OrderedDict
-from user_auth.permission import BookingOwner
-from django.db.models import Q
-from django.utils.dateparse import parse_datetime
-from django.utils.timezone import make_aware, is_naive
-from datetime import timedelta
-import pytz
+
 
 
 
@@ -184,17 +175,6 @@ class Metrics(APIView):
         count_ments = UserDetails.objects.filter(organization_detail__isnull=False).count()
         return Response({"students":count_stus, "ments":count_ments})
 
-class BookingCreateView(generics.CreateAPIView):
-    queryset = Booking.objects.all()
-    serializer_class = BookingSerializer
-    authentication_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        print(request.data)
-        serializer = self.get_serializer(data=request.data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class InterestListView(APIView):
     authentication_classes = [IsAuthenticated]
@@ -202,129 +182,3 @@ class InterestListView(APIView):
     def get(self, request):
         interests = Interest.objects.all().values_list('name', flat=True)
         return Response(list(interests))
-    
-class FreeTimeSlotView(APIView):
-    authentication_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user_id = request.query_params.get("id")
-        if user_id:
-            try:
-                user = UserDetails.objects.get(User_ID=user_id)
-            except UserDetails.DoesNotExist:
-                return Response({"error": "User not found."}, status=404)
-        else:
-            user = request.user
-        slots = FreeTimeSlots.objects.filter(User=user)
-        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        grouped = defaultdict(list)
-
-        for slot in slots:
-            day = slot.Day.capitalize()
-            serialized = FreeTimeSlotSerializer(slot).data
-            grouped[day].append(serialized)
-
-        result = OrderedDict()
-        for day in day_order:
-            result[day] = grouped.get(day, [])
-        return Response(result)
-
-    def post(self, request):
-        serializer = FreeTimeSlotSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Slot created successfully", "data": serializer.data}, status=201)
-        return Response(serializer.errors, status=400)
-
-class GmeetScheduleView(APIView):
-    authentication_classes = [IsAuthenticated]
-    permission_classes = [BookingOwner]
-
-    def post(self, request):
-        booking_id = request.data.get("Booking")
-        if not booking_id:
-            return Response({"error": "booking_id is required"}, status=400)
-
-        try:
-            booking = Booking.objects.get(pk=booking_id)
-        except Booking.DoesNotExist:
-            return Response({"error": "Booking not found"}, status=404)
-        self.check_object_permissions(request, booking)
-
-        start_time_str = request.data.get("Meeting_Start_Time")
-        end_time_str = request.data.get("Meeting_End_Time")
-
-        if not start_time_str or not end_time_str:
-            return Response({"error": "Meeting_Start_Time and Meeting_End_Time are required"}, status=400)
-
-        start_dt = parse_datetime(start_time_str)
-        end_dt = parse_datetime(end_time_str)
-
-        free_slots = FreeTimeSlots.objects.filter(User=booking.Mentor, Day=start_dt.strftime('%A'))
-
-        within_slot = False
-        for slot in free_slots:
-            if slot.Start_Time <= start_dt.time() and slot.End_Time >= end_dt.time():
-                within_slot = True
-                break
-
-        if not within_slot and not booking.Mentor == request.user:
-            return Response({"error": "No free time slot available for the mentor during this period."}, status=400)
-
-        if end_dt - start_dt < timedelta(minutes=15):
-            return Response({"error": "Meeting must be at least 15 minutes long."}, status=400)
-
-        start_dt = parse_datetime(start_time_str) - timedelta(hours=5, minutes=30)
-        end_dt = parse_datetime(end_time_str) - timedelta(hours=5, minutes=30)
-
-        overlapping_meetings = GmeetSchedule.objects.filter(
-            Q(Booking__Mentor=booking.Mentor) | Q(Booking__Mentee=booking.Mentor),
-            Meeting_Start_Time__lt=end_dt,
-            Meeting_End_Time__gt=start_dt
-        )
-
-        todays_bookings = GmeetSchedule.objects.filter(
-            Q(Booking__Mentor=booking.Mentor) | Q(Booking__Mentee=booking.Mentor),
-            Meeting_Start_Time__date=start_dt.date()
-        ).order_by('Meeting_Start_Time')
-
-        if overlapping_meetings.exists():
-            serialized = GmeetScheduleSerializer(todays_bookings, many=True).data
-            return Response({
-                "error": "Mentor not available at this time.",
-                "todays_bookings": serialized
-            }, status=203)
-
-        # Save meeting
-        serializer = GmeetScheduleSerializer(data=request.data)
-        if serializer.is_valid():
-            schedule = serializer.save()
-            return Response({
-                "message": "Meeting scheduled",
-                "meeting_link": schedule.Meeting_Link,
-                "start": schedule.Meeting_Start_Time,
-                "end": schedule.Meeting_End_Time,
-                "description": schedule.Description
-            }, status=201)
-
-        return Response(serializer.errors, status=400)
-    
-    def get(self, request):
-        user = request.user
-        bookings = Booking.objects.filter(Mentor=user) | Booking.objects.filter(Mentee=user)
-        schedules = GmeetSchedule.objects.filter(Booking__in=bookings).order_by('Meeting_Start_Time')
-
-        now = timezone.now()
-
-        # Separate into upcoming and completed
-        upcoming_schedules = schedules.filter(Meeting_End_Time__gte=now)
-        completed_schedules = schedules.filter(Meeting_End_Time__lt=now)
-
-        # Serialize separately
-        upcoming_data = GmeetScheduleSerializer(upcoming_schedules, many=True).data
-        completed_data = GmeetScheduleSerializer(completed_schedules, many=True).data
-
-        return Response({
-            "upcoming": upcoming_data,
-            "completed": completed_data
-        }, status=200)

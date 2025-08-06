@@ -11,20 +11,14 @@ from rest_framework import generics
 from .models import Interest
 from django.shortcuts import get_object_or_404
 
-
-
-
 class UserListView(generics.ListCreateAPIView):
     queryset = UserDetails.objects.all()
     serializer_class = UserSerializer
     authentication_classes = [IsAuthenticated]
 
-
-
 class ProfileView(APIView):
     authentication_classes = [IsAuthenticated]
-
-
+    
     def get(self, request):
         serializer = UserSerializer(request.user)
         data = serializer.data
@@ -33,11 +27,8 @@ class ProfileView(APIView):
     
 class Fieldofinterest(APIView):
     authentication_classes = [IsAuthenticated]  # Your custom one
-    
 
     def patch(self, request):
-        print("User:", request.user)
-
         user = request.user
         user_details = get_object_or_404(UserDetails, Email_Address=user.Email_Address)
 

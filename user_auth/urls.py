@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from .views import *
 
 urlpatterns = [
@@ -9,5 +9,6 @@ urlpatterns = [
     path('forgot-password/', ForgotPasswordView.as_view(),name="forgot pass"),
     path('verify-reset-otp/', VerifyResetOTPView.as_view(),name="verify pass"),
     path('set-new-password/', SetNewPasswordView.as_view(),name="setting-new pass"),
- 
+    path("finalize/", finalize_google_login),
+    path('', include('social_django.urls', namespace='social')),
 ]

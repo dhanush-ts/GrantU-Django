@@ -10,6 +10,38 @@ from users.authentication import *
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from connections.serializers import *
+from rest_framework.decorators import api_view
+from .models import UserDetails
+from django.shortcuts import redirect
+
+
+@api_view(['GET'])
+def finalize_google_login(request):
+    social_user = request.user  # This is the user created by social-auth (we'll ignore saving it)
+    print(social_user)
+
+    if not social_user or not social_user.is_authenticated:
+        return Response({"error": "User not authenticated"}, status=400)
+
+    email = getattr(social_user, 'email', None)
+    user, created = UserDetails.objects.get_or_create(
+        Email_Address=email,
+        defaults={
+            'First_Name': social_user.first_name or "First",
+            'Last_Name': social_user.last_name or "Last",
+            'Phone_Number': "",  # default empty phone,
+        }
+    )
+
+    # Now delete the Django default user (optional)
+    social_user.delete()
+
+    # Create your custom token
+    token = generate_token(user)
+    
+    frontend_redirect_url = f"http://localhost:5173/?token={token}"
+
+    return redirect(frontend_redirect_url)
 
 class RegisterView(APIView):
     def post(self, request):
@@ -54,7 +86,7 @@ class LoginView(APIView):
         except UserDetails.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        if user and password == user.Password and not user.is_verified:
+        if user and len(password)!=0 and password == user.Password and not user.is_verified:
             otp = f"{random.randint(0, 999999):06}"
             EmailOTP.objects.update_or_create(
                 email=user,
@@ -78,7 +110,7 @@ class LoginView(APIView):
             token = generate_token(user)
             return Response({'token': token, 'verified': False}, status=status.HTTP_201_CREATED)
 
-        elif user and password == user.Password and user.is_verified:
+        elif user and len(password)!=0 and password == user.Password and user.is_verified:
             token = generate_token(user)
             return Response({'token': token, 'verified': True, 'is_mentor': user.is_mentor}, status=status.HTTP_200_OK)
 

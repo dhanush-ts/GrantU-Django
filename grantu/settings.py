@@ -1,4 +1,5 @@
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'user_auth',
     'connections',  # Connections app
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -43,6 +45,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = "grantu.urls"
@@ -119,11 +126,6 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-
-
-
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -132,3 +134,9 @@ EMAIL_HOST_USER = 'aswinksatheesh07@gmail.com'         # your Gmail
 EMAIL_HOST_PASSWORD = 'azbikukouqwaydcx'       # Not your Gmail password ❌
 DEFAULT_FROM_EMAIL = 'youremail@gmail.com'
 GOOGLE_CALENDAR_ID = 'admin@grantu.education'
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
+
+LOGIN_REDIRECT_URL = '/api/auth/finalize/'
+SOCIAL_AUTH_ASSOCIATE_BY_EMAIL = False
